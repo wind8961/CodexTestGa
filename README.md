@@ -62,6 +62,8 @@ mvn -pl planner-service spring-boot:run
 
 `POST /api/plans/optimize`
 
+已提供可直接在 IntelliJ IDEA / VS Code REST Client 使用的 HTTP 测试文件：`planner-service/http/planner-api.http`。
+
 额外提供 Fastjson 字符串接口：`POST /api/plans/optimize/fastjson`（返回 fastjson 序列化后的 JSON 字符串）。
 
 示例请求：
