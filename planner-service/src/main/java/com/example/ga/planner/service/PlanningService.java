@@ -46,13 +46,7 @@ public class PlanningService {
         List<GanttTask> ganttTasks = best.genes().stream().map(task ->
                 new GanttTask(task.satelliteId(), task.taskType().name(), task.startEpochSecond(), task.endEpochSecond(), color(task.taskType().name()))).toList();
 
-        return new PlanResponse(
-                best.fitness(),
-                request.generations(),
-                plans,
-                ganttTasks,
-                ganttBuilder.toMermaid(ganttTasks),
-                ganttBuilder.toPngBase64(ganttTasks));
+        return new PlanResponse(best.fitness(), request.generations(), plans, ganttTasks, ganttBuilder.toMermaid(ganttTasks));
     }
 
     private String color(String type) {

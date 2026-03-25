@@ -15,4 +15,3 @@
 - `satellitePlans`：按星分组的三类计划。
 - `ganttTasks`：标准化甘特任务条目。
 - `mermaidGantt`：可视化文本，可直接渲染。
-- `ganttPngBase64`：后端直接生成的甘特图 PNG（Base64）。

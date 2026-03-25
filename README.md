@@ -5,7 +5,7 @@
 - 卫星观测计划
 - 卫星测控计划
 - 卫星数传计划
-- 甘特图数据（JSON + Mermaid Gantt 文本 + PNG(Base64)）
+- 甘特图数据（JSON + Mermaid Gantt 文本）
 
 支持卫星规模 **3~20 星**。
 
@@ -96,8 +96,6 @@ mvn -pl planner-service spring-boot:run
 ## 甘特图生成
 
 返回中 `mermaidGantt` 字段可直接复制到 Mermaid 渲染工具。
-
-返回中 `ganttPngBase64` 为 PNG 图片的 Base64，可直接在前端 `<img src="data:image/png;base64,...">` 展示。
 
 你也可以用前端（ECharts / Plotly / D3）直接消费 `ganttTasks` 生成交互式甘特图。
 

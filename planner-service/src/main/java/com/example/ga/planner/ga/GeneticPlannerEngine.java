@@ -32,7 +32,7 @@ public class GeneticPlannerEngine {
             List<Chromosome> sorted = population.stream()
                     .sorted(Comparator.comparingDouble(Chromosome::fitness).reversed())
                     .toList();
-            if (!sorted.isEmpty() && sorted.get(0).fitness() > best.fitness()) {
+            if (sorted.get(0).fitness() > best.fitness()) {
                 best = sorted.get(0);
             }
 

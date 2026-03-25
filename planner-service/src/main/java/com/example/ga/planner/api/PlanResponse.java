@@ -7,6 +7,5 @@ public record PlanResponse(
         int generationReached,
         List<SatellitePlan> satellitePlans,
         List<GanttTask> ganttTasks,
-        String mermaidGantt,
-        String ganttPngBase64) {
+        String mermaidGantt) {
 }

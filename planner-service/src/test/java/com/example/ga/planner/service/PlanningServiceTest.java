@@ -34,7 +34,6 @@ class PlanningServiceTest {
         assertEquals(3, response.satellitePlans().size());
         assertFalse(response.ganttTasks().isEmpty());
         assertFalse(response.mermaidGantt().isBlank());
-        assertFalse(response.ganttPngBase64().isBlank());
     }
 
     private SatelliteInput sat(String id, long base) {
