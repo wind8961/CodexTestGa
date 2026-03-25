@@ -11,6 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlanningServiceTest {
 
@@ -35,6 +36,18 @@ class PlanningServiceTest {
         assertFalse(response.ganttTasks().isEmpty());
         assertFalse(response.mermaidGantt().isBlank());
         assertFalse(response.ganttPngBase64().isBlank());
+    }
+
+    @Test
+    void shouldGenerateFastJsonString() {
+        PlanningService service = new PlanningService(new GeneticPlannerEngine(), new GanttBuilder());
+        PlanRequest request = new PlanRequest(List.of(sat("SAT-01", 1000), sat("SAT-02", 2000), sat("SAT-03", 3000)), 40, 60, 4, 10);
+
+        String json = service.generatePlanFastJson(request);
+
+        assertFalse(json.isBlank());
+        assertTrue(json.startsWith("{"));
+        assertTrue(json.contains("ganttPngBase64"));
     }
 
     private SatelliteInput sat(String id, long base) {

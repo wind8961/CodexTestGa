@@ -10,6 +10,11 @@
 - 输入校验限制：3~20 星。
 - 每星三个任务类别：观测 / TTC / 数传。
 
+## API 说明
+
+- `POST /api/plans/optimize`：返回结构化对象。
+- `POST /api/plans/optimize/fastjson`：返回 fastjson 序列化字符串。
+
 ## API 响应关键字段
 
 - `satellitePlans`：按星分组的三类计划。

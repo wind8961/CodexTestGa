@@ -1,5 +1,6 @@
 package com.example.ga.planner.service;
 
+import com.alibaba.fastjson2.JSON;
 import com.example.ga.planner.api.GanttTask;
 import com.example.ga.planner.api.PlanRequest;
 import com.example.ga.planner.api.PlanResponse;
@@ -53,6 +54,10 @@ public class PlanningService {
                 ganttTasks,
                 ganttBuilder.toMermaid(ganttTasks),
                 ganttBuilder.toPngBase64(ganttTasks));
+    }
+
+    public String generatePlanFastJson(PlanRequest request) {
+        return JSON.toJSONString(generatePlan(request));
     }
 
     private String color(String type) {
