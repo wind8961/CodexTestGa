@@ -1,0 +1,115 @@
+### 卫星联合任务规划 - 对象响应
+POST http://localhost:8081/api/plans/optimize
+Content-Type: application/json
+
+{
+  "satellites": [
+    {
+      "satelliteId": "SAT-01",
+      "observationWindows": [
+        {"startEpochSecond": 1711000000, "endEpochSecond": 1711000100},
+        {"startEpochSecond": 1711000300, "endEpochSecond": 1711000500}
+      ],
+      "ttcWindows": [
+        {"startEpochSecond": 1711000600, "endEpochSecond": 1711000700},
+        {"startEpochSecond": 1711000800, "endEpochSecond": 1711001000}
+      ],
+      "downlinkWindows": [
+        {"startEpochSecond": 1711001200, "endEpochSecond": 1711001400},
+        {"startEpochSecond": 1711001500, "endEpochSecond": 1711001700}
+      ]
+    },
+    {
+      "satelliteId": "SAT-02",
+      "observationWindows": [
+        {"startEpochSecond": 1711000050, "endEpochSecond": 1711000200},
+        {"startEpochSecond": 1711000400, "endEpochSecond": 1711000600}
+      ],
+      "ttcWindows": [
+        {"startEpochSecond": 1711000700, "endEpochSecond": 1711000900},
+        {"startEpochSecond": 1711001000, "endEpochSecond": 1711001200}
+      ],
+      "downlinkWindows": [
+        {"startEpochSecond": 1711001300, "endEpochSecond": 1711001500},
+        {"startEpochSecond": 1711001600, "endEpochSecond": 1711001800}
+      ]
+    },
+    {
+      "satelliteId": "SAT-03",
+      "observationWindows": [
+        {"startEpochSecond": 1711000020, "endEpochSecond": 1711000150},
+        {"startEpochSecond": 1711000250, "endEpochSecond": 1711000450}
+      ],
+      "ttcWindows": [
+        {"startEpochSecond": 1711000550, "endEpochSecond": 1711000750},
+        {"startEpochSecond": 1711000850, "endEpochSecond": 1711001050}
+      ],
+      "downlinkWindows": [
+        {"startEpochSecond": 1711001150, "endEpochSecond": 1711001350},
+        {"startEpochSecond": 1711001450, "endEpochSecond": 1711001650}
+      ]
+    }
+  ],
+  "populationSize": 120,
+  "generations": 300,
+  "eliteCount": 12,
+  "mutationRatePercent": 10
+}
+
+### 卫星联合任务规划 - Fastjson字符串响应
+POST http://localhost:8081/api/plans/optimize/fastjson
+Content-Type: application/json
+
+{
+  "satellites": [
+    {
+      "satelliteId": "SAT-01",
+      "observationWindows": [
+        {"startEpochSecond": 1711000000, "endEpochSecond": 1711000100},
+        {"startEpochSecond": 1711000300, "endEpochSecond": 1711000500}
+      ],
+      "ttcWindows": [
+        {"startEpochSecond": 1711000600, "endEpochSecond": 1711000700},
+        {"startEpochSecond": 1711000800, "endEpochSecond": 1711001000}
+      ],
+      "downlinkWindows": [
+        {"startEpochSecond": 1711001200, "endEpochSecond": 1711001400},
+        {"startEpochSecond": 1711001500, "endEpochSecond": 1711001700}
+      ]
+    },
+    {
+      "satelliteId": "SAT-02",
+      "observationWindows": [
+        {"startEpochSecond": 1711000050, "endEpochSecond": 1711000200},
+        {"startEpochSecond": 1711000400, "endEpochSecond": 1711000600}
+      ],
+      "ttcWindows": [
+        {"startEpochSecond": 1711000700, "endEpochSecond": 1711000900},
+        {"startEpochSecond": 1711001000, "endEpochSecond": 1711001200}
+      ],
+      "downlinkWindows": [
+        {"startEpochSecond": 1711001300, "endEpochSecond": 1711001500},
+        {"startEpochSecond": 1711001600, "endEpochSecond": 1711001800}
+      ]
+    },
+    {
+      "satelliteId": "SAT-03",
+      "observationWindows": [
+        {"startEpochSecond": 1711000020, "endEpochSecond": 1711000150},
+        {"startEpochSecond": 1711000250, "endEpochSecond": 1711000450}
+      ],
+      "ttcWindows": [
+        {"startEpochSecond": 1711000550, "endEpochSecond": 1711000750},
+        {"startEpochSecond": 1711000850, "endEpochSecond": 1711001050}
+      ],
+      "downlinkWindows": [
+        {"startEpochSecond": 1711001150, "endEpochSecond": 1711001350},
+        {"startEpochSecond": 1711001450, "endEpochSecond": 1711001650}
+      ]
+    }
+  ],
+  "populationSize": 120,
+  "generations": 300,
+  "eliteCount": 12,
+  "mutationRatePercent": 10
+}
