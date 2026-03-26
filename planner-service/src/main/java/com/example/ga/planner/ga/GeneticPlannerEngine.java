@@ -1,10 +1,23 @@
 package com.example.ga.planner.ga;
 
 import com.example.ga.common.model.Window;
-import com.example.ga.planner.api.*;
+import com.example.ga.planner.api.ObjectiveBreakdown;
+import com.example.ga.planner.api.ObjectiveWeights;
+import com.example.ga.planner.api.PlanRequest;
+import com.example.ga.planner.api.SatelliteInput;
+import com.example.ga.planner.api.TaskAssignment;
+import com.example.ga.planner.api.TaskType;
+import com.example.ga.planner.api.WindowInput;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -58,34 +71,71 @@ public class GeneticPlannerEngine {
 
             TaskAssignment ttc = toAssignment(sat.satelliteId(), TaskType.TTC, ttcIndex, sat.ttcWindows().get(ttcIndex));
             TaskAssignment downlink = toAssignment(sat.satelliteId(), TaskType.DOWNLINK, downlinkIndex, sat.downlinkWindows().get(downlinkIndex));
+
             genes.add(ttc);
             genes.add(downlink);
-
-            List<Integer> orderedIndexes = IntStream.range(0, sat.observationWindows().size()).boxed()
-                    .sorted(Comparator.comparingLong(i -> sat.observationWindows().get(i).startEpochSecond()))
-                    .toList();
-
-            int targetObsCount = ThreadLocalRandom.current().nextInt(1, Math.max(2, sat.observationWindows().size() / 2));
-            long previousEnd = Long.MIN_VALUE;
-            int chosen = 0;
-            for (int idx : orderedIndexes) {
-                if (chosen >= targetObsCount) {
-                    break;
-                }
-                WindowInput obs = sat.observationWindows().get(idx);
-                if (obs.endEpochSecond() > downlink.startEpochSecond() || obs.startEpochSecond() < previousEnd) {
-                    continue;
-                }
-                genes.add(toAssignment(sat.satelliteId(), TaskType.OBSERVATION, idx, obs));
-                previousEnd = obs.endEpochSecond();
-                chosen++;
-            }
-            if (chosen == 0) {
-                int fallback = ThreadLocalRandom.current().nextInt(sat.observationWindows().size());
-                genes.add(toAssignment(sat.satelliteId(), TaskType.OBSERVATION, fallback, sat.observationWindows().get(fallback)));
-            }
+            genes.addAll(buildObservationPlan(sat.satelliteId(), sat.observationWindows(), downlink, true));
         }
         return score(genes, weights);
+    }
+
+    private List<TaskAssignment> buildObservationPlan(String satelliteId,
+                                                      List<WindowInput> observationWindows,
+                                                      TaskAssignment downlink,
+                                                      boolean randomized) {
+        List<Integer> indexes = IntStream.range(0, observationWindows.size()).boxed()
+                .sorted(Comparator.comparingLong(i -> observationWindows.get(i).endEpochSecond()))
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        if (randomized) {
+            indexes.sort(Comparator.comparingDouble((Integer i) -> observationPriority(observationWindows.get(i))).reversed());
+            int rotate = ThreadLocalRandom.current().nextInt(indexes.size());
+            java.util.Collections.rotate(indexes, rotate);
+        }
+
+        List<TaskAssignment> selected = new ArrayList<>();
+        Set<String> targetSet = new HashSet<>();
+        long lastEnd = Long.MIN_VALUE;
+        double remainingCapacity = downlink.durationSeconds() * downlink.downlinkRateMbps();
+
+        for (int idx : indexes) {
+            WindowInput candidate = observationWindows.get(idx);
+            if (candidate.endEpochSecond() > downlink.startEpochSecond()) {
+                continue;
+            }
+            if (candidate.startEpochSecond() < lastEnd) {
+                continue;
+            }
+
+            TaskAssignment assignment = toAssignment(satelliteId, TaskType.OBSERVATION, idx, candidate);
+            boolean seenTarget = assignment.targetId() != null && targetSet.contains(assignment.targetId());
+            if (seenTarget && selected.size() >= 2) {
+                continue;
+            }
+            if (assignment.dataVolumeMb() > remainingCapacity) {
+                continue;
+            }
+
+            selected.add(assignment);
+            lastEnd = assignment.endEpochSecond();
+            remainingCapacity -= assignment.dataVolumeMb();
+            if (assignment.targetId() != null) {
+                targetSet.add(assignment.targetId());
+            }
+        }
+
+        if (selected.isEmpty()) {
+            int fallback = indexes.get(0);
+            selected.add(toAssignment(satelliteId, TaskType.OBSERVATION, fallback, observationWindows.get(fallback)));
+        }
+        return selected;
+    }
+
+    private double observationPriority(WindowInput window) {
+        long duration = Math.max(1, window.endEpochSecond() - window.startEpochSecond());
+        double profit = window.profit() > 0 ? window.profit() : duration;
+        double energy = window.energyCost() > 0 ? window.energyCost() : duration * 0.25;
+        return profit / Math.max(1.0, energy);
     }
 
     private TaskAssignment toAssignment(String satelliteId, TaskType type, int index, WindowInput w) {
@@ -135,25 +185,18 @@ public class GeneticPlannerEngine {
         List<TaskAssignment> genes = new ArrayList<>(source.genes());
         SatelliteInput sat = satellites.get(ThreadLocalRandom.current().nextInt(satellites.size()));
 
+        genes.removeIf(t -> t.satelliteId().equals(sat.satelliteId()) && t.taskType() == TaskType.TTC);
+        genes.removeIf(t -> t.satelliteId().equals(sat.satelliteId()) && t.taskType() == TaskType.DOWNLINK);
         genes.removeIf(t -> t.satelliteId().equals(sat.satelliteId()) && t.taskType() == TaskType.OBSERVATION);
-        int newObsCount = ThreadLocalRandom.current().nextInt(1, Math.max(2, sat.observationWindows().size() / 2));
-        List<Integer> shuffled = new ArrayList<>(IntStream.range(0, sat.observationWindows().size()).boxed().toList());
-        java.util.Collections.shuffle(shuffled);
-        for (int i = 0; i < Math.min(newObsCount, shuffled.size()); i++) {
-            int idx = shuffled.get(i);
-            genes.add(toAssignment(sat.satelliteId(), TaskType.OBSERVATION, idx, sat.observationWindows().get(idx)));
-        }
 
-        if (ThreadLocalRandom.current().nextBoolean()) {
-            genes.removeIf(t -> t.satelliteId().equals(sat.satelliteId()) && t.taskType() == TaskType.TTC);
-            int idx = ThreadLocalRandom.current().nextInt(sat.ttcWindows().size());
-            genes.add(toAssignment(sat.satelliteId(), TaskType.TTC, idx, sat.ttcWindows().get(idx)));
-        } else {
-            genes.removeIf(t -> t.satelliteId().equals(sat.satelliteId()) && t.taskType() == TaskType.DOWNLINK);
-            int idx = ThreadLocalRandom.current().nextInt(sat.downlinkWindows().size());
-            genes.add(toAssignment(sat.satelliteId(), TaskType.DOWNLINK, idx, sat.downlinkWindows().get(idx)));
-        }
+        int ttcIndex = ThreadLocalRandom.current().nextInt(sat.ttcWindows().size());
+        int dlIndex = ThreadLocalRandom.current().nextInt(sat.downlinkWindows().size());
+        TaskAssignment newTtc = toAssignment(sat.satelliteId(), TaskType.TTC, ttcIndex, sat.ttcWindows().get(ttcIndex));
+        TaskAssignment newDownlink = toAssignment(sat.satelliteId(), TaskType.DOWNLINK, dlIndex, sat.downlinkWindows().get(dlIndex));
+        genes.add(newTtc);
+        genes.add(newDownlink);
 
+        genes.addAll(buildObservationPlan(sat.satelliteId(), sat.observationWindows(), newDownlink, true));
         return score(genes, weights);
     }
 
@@ -169,7 +212,6 @@ public class GeneticPlannerEngine {
         double attitudeCost = 0;
         double latencyCost = 0;
         double conflictPenalty = 0;
-        Set<String> observedTargets = new HashSet<>();
 
         for (List<TaskAssignment> tasks : satTasks.values()) {
             List<TaskAssignment> obs = tasks.stream()
@@ -179,10 +221,11 @@ public class GeneticPlannerEngine {
             TaskAssignment ttc = tasks.stream().filter(t -> t.taskType() == TaskType.TTC).findFirst().orElse(null);
             TaskAssignment downlink = tasks.stream().filter(t -> t.taskType() == TaskType.DOWNLINK).findFirst().orElse(null);
 
+            Set<String> uniqueTargets = new HashSet<>();
             for (int i = 0; i < obs.size(); i++) {
                 TaskAssignment current = obs.get(i);
-                boolean firstTimeTarget = current.targetId() == null || observedTargets.add(current.targetId());
-                profitScore += firstTimeTarget ? current.profit() : current.profit() * 0.6;
+                boolean unique = current.targetId() == null || uniqueTargets.add(current.targetId());
+                profitScore += unique ? current.profit() : current.profit() * 0.65;
                 attitudeCost += current.attitudeCost();
 
                 if (i > 0) {
@@ -190,25 +233,28 @@ public class GeneticPlannerEngine {
                     attitudeCost += Math.abs(current.startEpochSecond() - previous.endEpochSecond()) / 60.0;
                 }
 
-                if (ttc == null || ttc.endEpochSecond() > current.startEpochSecond()) {
-                    conflictPenalty += 3000;
+                if (downlink == null || ttc == null || ttc.endEpochSecond() > downlink.startEpochSecond()) {
+                    conflictPenalty += 1500;
                 }
 
                 if (downlink != null) {
                     latencyCost += Math.max(0, downlink.startEpochSecond() - current.endEpochSecond());
                     if (current.endEpochSecond() > downlink.startEpochSecond()) {
-                        conflictPenalty += 8000;
+                        conflictPenalty += 6000;
                     }
                 } else {
-                    conflictPenalty += 5000;
+                    conflictPenalty += 7000;
                 }
             }
+
+            // 强化同星多目标观测：目标数和任务数都给正向激励
+            profitScore += uniqueTargets.size() * 120.0 + obs.size() * 40.0;
 
             if (downlink != null) {
                 double totalData = obs.stream().mapToDouble(TaskAssignment::dataVolumeMb).sum();
                 double capacity = downlink.durationSeconds() * downlink.downlinkRateMbps();
                 if (totalData > capacity) {
-                    conflictPenalty += (totalData - capacity) * 8;
+                    conflictPenalty += (totalData - capacity) * 10;
                 }
             }
 
@@ -237,6 +283,8 @@ public class GeneticPlannerEngine {
                     penalty += 10_000;
                 }
             }
+
+            conflictPenalty += overlapPenalty(tasks);
         }
         return penalty;
     }
