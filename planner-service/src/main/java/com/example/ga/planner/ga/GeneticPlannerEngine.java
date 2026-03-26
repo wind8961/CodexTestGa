@@ -84,18 +84,15 @@ public class GeneticPlannerEngine {
                                                       TaskAssignment downlink,
                                                       boolean randomized) {
         List<Integer> indexes = IntStream.range(0, observationWindows.size()).boxed()
-                .sorted(Comparator.comparingLong(i -> observationWindows.get(i).endEpochSecond()))
                 .collect(Collectors.toCollection(ArrayList::new));
-
+        indexes.sort(Comparator.comparingDouble((Integer i) -> observationPriority(observationWindows.get(i))).reversed());
         if (randomized) {
+            java.util.Collections.shuffle(indexes);
             indexes.sort(Comparator.comparingDouble((Integer i) -> observationPriority(observationWindows.get(i))).reversed());
-            int rotate = ThreadLocalRandom.current().nextInt(indexes.size());
-            java.util.Collections.rotate(indexes, rotate);
         }
 
         List<TaskAssignment> selected = new ArrayList<>();
         Set<String> targetSet = new HashSet<>();
-        long lastEnd = Long.MIN_VALUE;
         double remainingCapacity = downlink.durationSeconds() * downlink.downlinkRateMbps();
 
         for (int idx : indexes) {
@@ -103,32 +100,68 @@ public class GeneticPlannerEngine {
             if (candidate.endEpochSecond() > downlink.startEpochSecond()) {
                 continue;
             }
-            if (candidate.startEpochSecond() < lastEnd) {
+
+            TaskAssignment assignment = toAssignment(satelliteId, TaskType.OBSERVATION, idx, candidate);
+            if (assignment.dataVolumeMb() > remainingCapacity || overlapsSelected(assignment, selected)) {
                 continue;
             }
 
-            TaskAssignment assignment = toAssignment(satelliteId, TaskType.OBSERVATION, idx, candidate);
             boolean seenTarget = assignment.targetId() != null && targetSet.contains(assignment.targetId());
             if (seenTarget && selected.size() >= 2) {
                 continue;
             }
-            if (assignment.dataVolumeMb() > remainingCapacity) {
-                continue;
-            }
 
             selected.add(assignment);
-            lastEnd = assignment.endEpochSecond();
             remainingCapacity -= assignment.dataVolumeMb();
             if (assignment.targetId() != null) {
                 targetSet.add(assignment.targetId());
             }
         }
 
+        selected.sort(Comparator.comparingLong(TaskAssignment::startEpochSecond));
+        if (selected.size() < 2) {
+            fillObservationFallback(satelliteId, observationWindows, downlink, selected, remainingCapacity);
+        }
         if (selected.isEmpty()) {
-            int fallback = indexes.get(0);
+            int fallback = IntStream.range(0, observationWindows.size())
+                    .boxed()
+                    .min(Comparator.comparingLong(i -> observationWindows.get(i).startEpochSecond()))
+                    .orElse(0);
             selected.add(toAssignment(satelliteId, TaskType.OBSERVATION, fallback, observationWindows.get(fallback)));
         }
+        selected.sort(Comparator.comparingLong(TaskAssignment::startEpochSecond));
         return selected;
+    }
+
+    private void fillObservationFallback(String satelliteId,
+                                         List<WindowInput> observationWindows,
+                                         TaskAssignment downlink,
+                                         List<TaskAssignment> selected,
+                                         double remainingCapacity) {
+        List<Integer> chronological = IntStream.range(0, observationWindows.size()).boxed()
+                .sorted(Comparator.comparingLong(i -> observationWindows.get(i).startEpochSecond()))
+                .toList();
+        double capacity = remainingCapacity;
+        for (int idx : chronological) {
+            if (selected.size() >= 2) {
+                break;
+            }
+            WindowInput candidate = observationWindows.get(idx);
+            if (candidate.endEpochSecond() > downlink.startEpochSecond()) {
+                continue;
+            }
+            TaskAssignment assignment = toAssignment(satelliteId, TaskType.OBSERVATION, idx, candidate);
+            if (assignment.dataVolumeMb() <= capacity && !overlapsSelected(assignment, selected)) {
+                selected.add(assignment);
+                capacity -= assignment.dataVolumeMb();
+            }
+        }
+    }
+
+    private boolean overlapsSelected(TaskAssignment candidate, List<TaskAssignment> selected) {
+        return selected.stream().anyMatch(existing ->
+                candidate.startEpochSecond() < existing.endEpochSecond()
+                        && candidate.endEpochSecond() > existing.startEpochSecond());
     }
 
     private double observationPriority(WindowInput window) {
@@ -260,6 +293,8 @@ public class GeneticPlannerEngine {
 
             conflictPenalty += overlapPenalty(tasks);
         }
+        return penalty;
+    }
 
         conflictPenalty += stationConflictPenalty(genes.stream().filter(t -> t.taskType() != TaskType.OBSERVATION).toList());
 
@@ -283,8 +318,6 @@ public class GeneticPlannerEngine {
                     penalty += 10_000;
                 }
             }
-
-            conflictPenalty += overlapPenalty(tasks);
         }
         return penalty;
     }
