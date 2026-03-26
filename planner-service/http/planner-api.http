@@ -7,16 +7,16 @@ Content-Type: application/json
     {
       "satelliteId": "SAT-01",
       "observationWindows": [
-        {"startEpochSecond": 1711000000, "endEpochSecond": 1711000100},
-        {"startEpochSecond": 1711000300, "endEpochSecond": 1711000500}
+        {"startEpochSecond": 1711000000, "endEpochSecond": 1711000100, "targetId": "T-SEA-01", "profit": 120, "energyCost": 28, "attitudeCost": 3, "dataVolumeMb": 180},
+        {"startEpochSecond": 1711000300, "endEpochSecond": 1711000500, "targetId": "T-SEA-02", "profit": 140, "energyCost": 34, "attitudeCost": 4, "dataVolumeMb": 240}
       ],
       "ttcWindows": [
-        {"startEpochSecond": 1711000600, "endEpochSecond": 1711000700},
-        {"startEpochSecond": 1711000800, "endEpochSecond": 1711001000}
+        {"startEpochSecond": 1711000600, "endEpochSecond": 1711000700, "stationId": "GS-NJ", "profit": 20, "energyCost": 8, "attitudeCost": 1, "dataVolumeMb": 100, "downlinkRateMbps": 8},
+        {"startEpochSecond": 1711000800, "endEpochSecond": 1711001000, "stationId": "GS-NJ", "profit": 30, "energyCost": 12, "attitudeCost": 1, "dataVolumeMb": 200, "downlinkRateMbps": 10}
       ],
       "downlinkWindows": [
-        {"startEpochSecond": 1711001200, "endEpochSecond": 1711001400},
-        {"startEpochSecond": 1711001500, "endEpochSecond": 1711001700}
+        {"startEpochSecond": 1711001200, "endEpochSecond": 1711001400, "stationId": "GS-SH", "profit": 40, "energyCost": 14, "attitudeCost": 1, "dataVolumeMb": 260, "downlinkRateMbps": 14},
+        {"startEpochSecond": 1711001500, "endEpochSecond": 1711001700, "stationId": "GS-SH", "profit": 36, "energyCost": 10, "attitudeCost": 1, "dataVolumeMb": 230, "downlinkRateMbps": 12}
       ]
     },
     {
@@ -53,7 +53,8 @@ Content-Type: application/json
   "populationSize": 120,
   "generations": 300,
   "eliteCount": 12,
-  "mutationRatePercent": 10
+  "mutationRatePercent": 10,
+  "objectiveWeights": {"profitWeight": 1.0, "energyWeight": 0.6, "attitudeWeight": 0.4, "latencyWeight": 0.5}
 }
 
 ### 卫星联合任务规划 - Fastjson字符串响应
@@ -65,16 +66,16 @@ Content-Type: application/json
     {
       "satelliteId": "SAT-01",
       "observationWindows": [
-        {"startEpochSecond": 1711000000, "endEpochSecond": 1711000100},
-        {"startEpochSecond": 1711000300, "endEpochSecond": 1711000500}
+        {"startEpochSecond": 1711000000, "endEpochSecond": 1711000100, "targetId": "T-SEA-01", "profit": 120, "energyCost": 28, "attitudeCost": 3, "dataVolumeMb": 180},
+        {"startEpochSecond": 1711000300, "endEpochSecond": 1711000500, "targetId": "T-SEA-02", "profit": 140, "energyCost": 34, "attitudeCost": 4, "dataVolumeMb": 240}
       ],
       "ttcWindows": [
-        {"startEpochSecond": 1711000600, "endEpochSecond": 1711000700},
-        {"startEpochSecond": 1711000800, "endEpochSecond": 1711001000}
+        {"startEpochSecond": 1711000600, "endEpochSecond": 1711000700, "stationId": "GS-NJ", "profit": 20, "energyCost": 8, "attitudeCost": 1, "dataVolumeMb": 100, "downlinkRateMbps": 8},
+        {"startEpochSecond": 1711000800, "endEpochSecond": 1711001000, "stationId": "GS-NJ", "profit": 30, "energyCost": 12, "attitudeCost": 1, "dataVolumeMb": 200, "downlinkRateMbps": 10}
       ],
       "downlinkWindows": [
-        {"startEpochSecond": 1711001200, "endEpochSecond": 1711001400},
-        {"startEpochSecond": 1711001500, "endEpochSecond": 1711001700}
+        {"startEpochSecond": 1711001200, "endEpochSecond": 1711001400, "stationId": "GS-SH", "profit": 40, "energyCost": 14, "attitudeCost": 1, "dataVolumeMb": 260, "downlinkRateMbps": 14},
+        {"startEpochSecond": 1711001500, "endEpochSecond": 1711001700, "stationId": "GS-SH", "profit": 36, "energyCost": 10, "attitudeCost": 1, "dataVolumeMb": 230, "downlinkRateMbps": 12}
       ]
     },
     {
@@ -111,5 +112,6 @@ Content-Type: application/json
   "populationSize": 120,
   "generations": 300,
   "eliteCount": 12,
-  "mutationRatePercent": 10
+  "mutationRatePercent": 10,
+  "objectiveWeights": {"profitWeight": 1.0, "energyWeight": 0.6, "attitudeWeight": 0.4, "latencyWeight": 0.5}
 }
