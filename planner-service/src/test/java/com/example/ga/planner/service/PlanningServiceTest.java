@@ -36,6 +36,8 @@ class PlanningServiceTest {
         assertFalse(response.ganttTasks().isEmpty());
         assertFalse(response.mermaidGantt().isBlank());
         assertFalse(response.ganttPngBase64().isBlank());
+        assertNotNull(response.objectiveBreakdown());
+        assertTrue(response.satellitePlans().stream().allMatch(p -> p.observationPlan().size() >= 1));
     }
 
     @Test
