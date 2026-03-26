@@ -283,6 +283,8 @@ public class GeneticPlannerEngine {
                     penalty += 10_000;
                 }
             }
+
+            conflictPenalty += overlapPenalty(tasks);
         }
         return penalty;
     }
