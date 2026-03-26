@@ -106,7 +106,9 @@ mvn -pl planner-service spring-boot:run
 - 支持**跨星地面站约束**：当不同卫星占用同一 `stationId` 且时间重叠时进行冲突惩罚。
 
 扩展输入字段（`WindowInput`）示例：`targetId`、`stationId`、`profit`、`energyCost`、`attitudeCost`、`dataVolumeMb`、`downlinkRateMbps`。
+
 - 约束分析已纳入 `targetId/stationId/profit/energyCost/attitudeCost/dataVolumeMb/downlinkRateMbps`：目标重复观测折减收益、同站并发冲突惩罚、数传容量约束、测控前置约束。
+
 
 ## 甘特图生成
 

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -202,6 +203,12 @@ public class GeneticPlannerEngine {
                     TaskAssignment previous = obs.get(i - 1);
                     attitudeCost += Math.abs(current.startEpochSecond() - previous.endEpochSecond()) / 60.0;
                 }
+                double totalData = obs.stream().mapToDouble(TaskAssignment::dataVolumeMb).sum();
+                double downlinkCapacity = downlink.durationSeconds() * downlink.downlinkRateMbps();
+                if (totalData > downlinkCapacity) {
+                    conflictPenalty += (totalData - downlinkCapacity) * 5;
+                }
+            }
 
                 if (ttc == null || ttc.endEpochSecond() > current.startEpochSecond()) {
                     conflictPenalty += 3000;
@@ -227,6 +234,8 @@ public class GeneticPlannerEngine {
 
             conflictPenalty += overlapPenalty(tasks);
         }
+        return penalty;
+    }
 
         conflictPenalty += stationConflictPenalty(genes.stream().filter(t -> t.taskType() != TaskType.OBSERVATION).toList());
 

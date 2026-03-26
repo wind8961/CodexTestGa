@@ -36,8 +36,10 @@ class PlanningServiceTest {
         assertFalse(response.ganttPngBase64().isBlank());
         assertNotNull(response.objectiveBreakdown());
         assertTrue(response.satellitePlans().stream().allMatch(p -> p.observationPlan().size() >= 1));
+
         assertTrue(response.satellitePlans().stream().flatMap(p -> p.observationPlan().stream()).allMatch(o -> o.profit() > 0));
         assertTrue(response.satellitePlans().stream().flatMap(p -> p.downlinkPlan().stream()).allMatch(d -> d.downlinkRateMbps() > 0));
+
     }
 
     @Test
