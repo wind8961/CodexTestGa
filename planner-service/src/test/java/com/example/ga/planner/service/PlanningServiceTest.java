@@ -75,11 +75,11 @@ class PlanningServiceTest {
                 new WindowInput(base + 120, base + 220, satelliteId + "-T2", null, 95, 30, 3, 140, 0),
                 new WindowInput(base + 260, base + 340, satelliteId + "-T3", null, 90, 26, 2, 130, 0),
                 new WindowInput(base + 530, base + 640, satelliteId + "-T4", null, 110, 36, 4, 180, 0),
-                new WindowInput(base + 850, base + 940, satelliteId + "-T5", null, 98, 31, 3, 150, 0),
-                new WindowInput(base + 1120, base + 1220, satelliteId + "-T6", null, 108, 33, 4, 165, 0),
+                new WindowInput(base + 850, base + 940, satelliteId + "-T1", null, 98, 31, 3, 150, 0),
+                new WindowInput(base + 1120, base + 1220, satelliteId + "-T2", null, 108, 33, 4, 165, 0),
                 new WindowInput(base + 1260, base + 1340, satelliteId + "-T7", null, 92, 25, 2, 120, 0),
-                new WindowInput(base + 1530, base + 1640, satelliteId + "-T8", null, 118, 37, 4, 190, 0),
-                new WindowInput(base + 1850, base + 1940, satelliteId + "-T9", null, 100, 29, 3, 145, 0)
+                new WindowInput(base + 1530, base + 1640, satelliteId + "-T3", null, 118, 37, 4, 190, 0),
+                new WindowInput(base + 1850, base + 1940, satelliteId + "-T5", null, 100, 29, 3, 145, 0)
         );
     }
 }

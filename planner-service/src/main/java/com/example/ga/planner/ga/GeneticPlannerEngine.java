@@ -1,24 +1,10 @@
 package com.example.ga.planner.ga;
 
 import com.example.ga.common.model.Window;
-import com.example.ga.planner.api.ObjectiveBreakdown;
-import com.example.ga.planner.api.ObjectiveWeights;
-import com.example.ga.planner.api.PlanRequest;
-import com.example.ga.planner.api.SatelliteInput;
-import com.example.ga.planner.api.TaskAssignment;
-import com.example.ga.planner.api.TaskType;
-import com.example.ga.planner.api.WindowInput;
+import com.example.ga.planner.api.*;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -203,12 +189,6 @@ public class GeneticPlannerEngine {
                     TaskAssignment previous = obs.get(i - 1);
                     attitudeCost += Math.abs(current.startEpochSecond() - previous.endEpochSecond()) / 60.0;
                 }
-                double totalData = obs.stream().mapToDouble(TaskAssignment::dataVolumeMb).sum();
-                double downlinkCapacity = downlink.durationSeconds() * downlink.downlinkRateMbps();
-                if (totalData > downlinkCapacity) {
-                    conflictPenalty += (totalData - downlinkCapacity) * 5;
-                }
-            }
 
                 if (ttc == null || ttc.endEpochSecond() > current.startEpochSecond()) {
                     conflictPenalty += 3000;
@@ -234,8 +214,6 @@ public class GeneticPlannerEngine {
 
             conflictPenalty += overlapPenalty(tasks);
         }
-        return penalty;
-    }
 
         conflictPenalty += stationConflictPenalty(genes.stream().filter(t -> t.taskType() != TaskType.OBSERVATION).toList());
 
