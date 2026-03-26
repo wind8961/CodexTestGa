@@ -17,67 +17,67 @@ class PlanningServiceTest {
     void shouldGeneratePlanForThreeSatellites() {
         PlanningService service = new PlanningService(new GeneticPlannerEngine(), new GanttBuilder());
 
-        // 模拟卫星窗口输入：SAT-01, SAT-02, SAT-03，每个卫星有3组窗口
         PlanRequest request = new PlanRequest(
                 List.of(
-                        sat("SAT-01", 1000),
-                        sat("SAT-02", 2000),
-                        sat("SAT-03", 3000)
-                ),    // 卫星输入窗口列表
-                80,   // 种群大小
-                120,  // 迭代次数
-                8,    // 精英数量
-                12);  // 突变率
+                        sat("SAT-01", 1000, "GS-A"),
+                        sat("SAT-02", 2000, "GS-B"),
+                        sat("SAT-03", 3000, "GS-A")
+                ),
+                80,
+                120,
+                8,
+                12);
 
-        // 生成计划并验证结果
         var response = service.generatePlan(request);
 
         assertEquals(3, response.satellitePlans().size());
         assertFalse(response.ganttTasks().isEmpty());
         assertFalse(response.mermaidGantt().isBlank());
         assertFalse(response.ganttPngBase64().isBlank());
+        assertNotNull(response.objectiveBreakdown());
+        assertTrue(response.satellitePlans().stream().allMatch(p -> p.observationPlan().size() >= 1));
+        assertTrue(response.satellitePlans().stream().flatMap(p -> p.observationPlan().stream()).allMatch(o -> o.profit() > 0));
+        assertTrue(response.satellitePlans().stream().flatMap(p -> p.downlinkPlan().stream()).allMatch(d -> d.downlinkRateMbps() > 0));
     }
 
     @Test
     void shouldGenerateFastJsonString() {
         PlanningService service = new PlanningService(new GeneticPlannerEngine(), new GanttBuilder());
-        PlanRequest request = new PlanRequest(List.of(sat("SAT-01", 1000), sat("SAT-02", 2000), sat("SAT-03", 3000)), 40, 60, 4, 10);
+        PlanRequest request = new PlanRequest(List.of(sat("SAT-01", 1000, "GS-A"), sat("SAT-02", 2000, "GS-B"), sat("SAT-03", 3000, "GS-C")), 40, 60, 4, 10);
 
         String json = service.generatePlanFastJson(request);
 
         assertFalse(json.isBlank());
         assertTrue(json.startsWith("{"));
         assertTrue(json.contains("ganttPngBase64"));
+        assertTrue(json.contains("objectiveBreakdown"));
     }
 
-    // 生成卫星输入：卫星ID、观测窗口、TTC窗口和下行链接窗口
-    private SatelliteInput sat(String id, long base) {
+    private SatelliteInput sat(String id, long base, String stationId) {
         return new SatelliteInput(id,
-                observationWindows(base),
-                stationWindows(base + 2200),
-                stationWindows(base + 2400));
+                observationWindows(id, base),
+                stationWindows(base + 2200, stationId, 8),
+                stationWindows(base + 2400, stationId, 12));
     }
 
-    // 生成3组窗口输入
-    private List<WindowInput> stationWindows(long base) {
+    private List<WindowInput> stationWindows(long base, String stationId, double rateMbps) {
         return List.of(
-                new WindowInput(base, base + 60),
-                new WindowInput(base + 120, base + 220)
+                new WindowInput(base, base + 60, null, stationId, 10, 6, 1, 150, rateMbps),
+                new WindowInput(base + 120, base + 220, null, stationId, 12, 8, 1, 220, rateMbps)
         );
     }
 
-    // 生成3组窗口输入
-    private List<WindowInput> observationWindows(long base) {
+    private List<WindowInput> observationWindows(String satelliteId, long base) {
         return List.of(
-                new WindowInput(base, base + 60),
-                new WindowInput(base + 120, base + 220),
-                new WindowInput(base + 260, base + 340),
-                new WindowInput(base + 530, base + 640),
-                new WindowInput(base + 850, base + 940),
-                new WindowInput(base + 1120, base + 1220),
-                new WindowInput(base + 1260, base + 1340),
-                new WindowInput(base + 1530, base + 1640),
-                new WindowInput(base + 1850, base + 1940)
+                new WindowInput(base, base + 60, satelliteId + "-T1", null, 80, 22, 2, 100, 0),
+                new WindowInput(base + 120, base + 220, satelliteId + "-T2", null, 95, 30, 3, 140, 0),
+                new WindowInput(base + 260, base + 340, satelliteId + "-T3", null, 90, 26, 2, 130, 0),
+                new WindowInput(base + 530, base + 640, satelliteId + "-T4", null, 110, 36, 4, 180, 0),
+                new WindowInput(base + 850, base + 940, satelliteId + "-T5", null, 98, 31, 3, 150, 0),
+                new WindowInput(base + 1120, base + 1220, satelliteId + "-T6", null, 108, 33, 4, 165, 0),
+                new WindowInput(base + 1260, base + 1340, satelliteId + "-T7", null, 92, 25, 2, 120, 0),
+                new WindowInput(base + 1530, base + 1640, satelliteId + "-T8", null, 118, 37, 4, 190, 0),
+                new WindowInput(base + 1850, base + 1940, satelliteId + "-T9", null, 100, 29, 3, 145, 0)
         );
     }
 }

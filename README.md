@@ -97,6 +97,17 @@ mvn -pl planner-service spring-boot:run
 }
 ```
 
+
+## 本次增强能力（联合规划）
+
+- 支持**多目标加权优化**：`objectiveWeights` 可配置收益、能耗、姿态切换、时延权重。
+- 支持**同星多观测窗口**：单颗卫星可同时选取多个观测窗口。
+- 支持**共享测控/数传窗口下传**：每星选择一个 TTC + Downlink 窗口，并将多个观测任务聚合到同一数传窗口评估容量。
+- 支持**跨星地面站约束**：当不同卫星占用同一 `stationId` 且时间重叠时进行冲突惩罚。
+
+扩展输入字段（`WindowInput`）示例：`targetId`、`stationId`、`profit`、`energyCost`、`attitudeCost`、`dataVolumeMb`、`downlinkRateMbps`。
+- 约束分析已纳入 `targetId/stationId/profit/energyCost/attitudeCost/dataVolumeMb/downlinkRateMbps`：目标重复观测折减收益、同站并发冲突惩罚、数传容量约束、测控前置约束。
+
 ## 甘特图生成
 
 返回中 `mermaidGantt` 字段可直接复制到 Mermaid 渲染工具。
