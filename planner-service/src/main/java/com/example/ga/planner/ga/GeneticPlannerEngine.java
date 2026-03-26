@@ -293,6 +293,8 @@ public class GeneticPlannerEngine {
 
             conflictPenalty += overlapPenalty(tasks);
         }
+        return penalty;
+    }
 
         conflictPenalty += stationConflictPenalty(genes.stream().filter(t -> t.taskType() != TaskType.OBSERVATION).toList());
 
