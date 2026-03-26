@@ -33,22 +33,25 @@ public class PlanningService {
                 .sorted(Comparator.comparing(TaskAssignment::startEpochSecond))
                 .collect(Collectors.groupingBy(TaskAssignment::satelliteId));
 
-        List<SatellitePlan> plans = grouped.entrySet().stream().map(entry -> {
-            String sat = entry.getKey();
-            List<TaskAssignment> all = entry.getValue();
-            return new SatellitePlan(
-                    sat,
-                    all.stream().filter(t -> t.taskType().name().equals("OBSERVATION")).toList(),
-                    all.stream().filter(t -> t.taskType().name().equals("TTC")).toList(),
-                    all.stream().filter(t -> t.taskType().name().equals("DOWNLINK")).toList()
-            );
-        }).toList();
+        List<SatellitePlan> plans = grouped.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    String sat = entry.getKey();
+                    List<TaskAssignment> all = entry.getValue();
+                    return new SatellitePlan(
+                            sat,
+                            all.stream().filter(t -> t.taskType().name().equals("OBSERVATION")).toList(),
+                            all.stream().filter(t -> t.taskType().name().equals("TTC")).toList(),
+                            all.stream().filter(t -> t.taskType().name().equals("DOWNLINK")).toList()
+                    );
+                }).toList();
 
         List<GanttTask> ganttTasks = best.genes().stream().map(task ->
                 new GanttTask(task.satelliteId(), task.taskType().name(), task.startEpochSecond(), task.endEpochSecond(), color(task.taskType().name()))).toList();
 
         return new PlanResponse(
                 best.fitness(),
+                best.objectiveBreakdown(),
                 request.generations(),
                 plans,
                 ganttTasks,
